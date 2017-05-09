@@ -419,16 +419,6 @@ std::vector<transform::Rigid3d> SparsePoseGraph::GetSubmapTransforms(
   return ExtrapolateSubmapTransforms(optimized_submap_transforms_, trajectory);
 }
 
-std::vector<transform::Rigid3d> SparsePoseGraph::GetSubmapTransforms() {
-  common::MutexLocker locker(&mutex_);
-  std::vector<transform::Rigid3d> result;
-  for ( auto transform: submap_transforms_){
-    result.push_back(transform);
-  }
-  return result;
-}
-
-
 std::vector<transform::Rigid3d> SparsePoseGraph::ExtrapolateSubmapTransforms(
     const std::vector<transform::Rigid3d>& submap_transforms,
     const mapping::Submaps* const trajectory) const {
