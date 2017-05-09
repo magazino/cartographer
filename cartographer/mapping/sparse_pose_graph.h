@@ -23,7 +23,6 @@
 #include <vector>
 
 #include "cartographer/common/lua_parameter_dictionary.h"
-#include "cartographer/mapping/proto/scan_matching_progress.pb.h"
 #include "cartographer/mapping/proto/sparse_pose_graph.pb.h"
 #include "cartographer/mapping/proto/sparse_pose_graph_options.pb.h"
 #include "cartographer/mapping/submaps.h"
@@ -106,39 +105,33 @@ class SparsePoseGraph {
   // Computes optimized poses.
   virtual void RunFinalOptimization() = 0;
 
-  // Will once return true whenever new optimized poses are available.
-  virtual bool HasNewOptimizedPoses() = 0;
-
-  // Returns the scan matching progress.
-  virtual proto::ScanMatchingProgress GetScanMatchingProgress() = 0;
-
   // Get the current trajectory clusters.
   virtual std::vector<std::vector<const Submaps*>>
   GetConnectedTrajectories() = 0;
 
-  // Returns the current optimized transforms for the given 'submaps'.
+  // Returns the current optimized transforms for the given 'trajectory'.
   virtual std::vector<transform::Rigid3d> GetSubmapTransforms(
-      const Submaps& submaps) = 0;
-  virtual std::vector<transform::Rigid3d> GetSubmapTransforms() = 0;
+      const Submaps* trajectory) = 0;
 
   // Returns the transform converting data in the local map frame (i.e. the
   // continuous, non-loop-closed frame) into the global map frame (i.e. the
   // discontinuous, loop-closed frame).
   virtual transform::Rigid3d GetLocalToGlobalTransform(
-      const Submaps& submaps) = 0;
+      const Submaps* submaps) = 0;
 
   // Returns the current optimized trajectory.
   virtual std::vector<TrajectoryNode> GetTrajectoryNodes() = 0;
 
-  // TODO(macmason, wohe): Consider replacing this with a GroupSubmapStates,
-  // which would have better separation of concerns.
-  virtual std::vector<SubmapState> GetSubmapStates() = 0;
+  // Serializes the constraints and trajectories.
+  proto::SparsePoseGraph ToProto();
 
   // Returns the collection of constraints.
   virtual std::vector<Constraint> constraints() = 0;
 
-  // Serializes the constraints and trajectories.
-  proto::SparsePoseGraph ToProto();
+ protected:
+  // TODO(macmason, wohe): Consider replacing this with a GroupSubmapStates,
+  // which would have better separation of concerns.
+  virtual std::vector<SubmapState> GetSubmapStates() = 0;
 };
 
 // Like TrajectoryNodes, SubmapStates arrive in a flat vector, but need to be
