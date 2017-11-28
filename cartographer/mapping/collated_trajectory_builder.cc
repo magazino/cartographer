@@ -53,6 +53,7 @@ void CollatedTrajectoryBuilder::AddSensorData(
 
 void CollatedTrajectoryBuilder::HandleCollatedSensorData(
     const std::string& sensor_id, std::unique_ptr<sensor::Data> data) {
+  /*
   auto it = rate_timers_.find(sensor_id);
   if (it == rate_timers_.end()) {
     it = rate_timers_
@@ -71,6 +72,7 @@ void CollatedTrajectoryBuilder::HandleCollatedSensorData(
     }
     last_logging_time_ = std::chrono::steady_clock::now();
   }
+  */
 
   data->AddToTrajectoryBuilder(wrapped_trajectory_builder_.get());
 }
