@@ -257,7 +257,7 @@ std::unique_ptr<transform::Rigid3d> OptimizationProblem::InterpolateOdometry(
 transform::Rigid3d OptimizationProblem::ComputeRelativePose(
     const int trajectory_id, const NodeData& first_node_data,
     const NodeData& second_node_data) const {
-  if (odometry_data_.HasTrajectory(trajectory_id)) {
+  if (!options_.disable_odometry() && odometry_data_.HasTrajectory(trajectory_id)) {
     const std::unique_ptr<transform::Rigid3d> first_node_odometry =
         InterpolateOdometry(trajectory_id, first_node_data.time);
     const std::unique_ptr<transform::Rigid3d> second_node_odometry =

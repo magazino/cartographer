@@ -116,6 +116,7 @@ class PoseGraphTest : public ::testing::Test {
               acceleration_weight = 1.,
               rotation_weight = 1e2,
               huber_scale = 1.,
+              disable_odometry = false,
               consecutive_node_translation_weight = 0.,
               consecutive_node_rotation_weight = 0.,
               fixed_frame_pose_translation_weight = 1e1,
