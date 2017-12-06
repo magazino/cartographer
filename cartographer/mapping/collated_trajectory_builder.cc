@@ -74,7 +74,7 @@ void CollatedTrajectoryBuilder::HandleCollatedSensorData(
   }
   */
 
-  data->AddToTrajectoryBuilder(wrapped_trajectory_builder_.get());
+  data->AddToGlobalTrajectoryBuilder(wrapped_trajectory_builder_.get());
 }
 
 }  // namespace mapping
