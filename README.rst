@@ -16,66 +16,15 @@
 Cartographer
 ============
 
-|build| |docs| |license|
+**Disclaimer**
 
-Purpose
-=======
+This repository is only used to host branches for pull requests into Google's upstream.
 
-`Cartographer`_ is a system that provides real-time simultaneous localization
-and mapping (`SLAM`_) in 2D and 3D across multiple platforms and sensor
-configurations.
+This is *not* Magazino's production fork and the master branch is not being maintained. For the latest public version of Cartographer, please head to googlecartographer_.
 
-|video|
+----
 
-.. _Cartographer: https://github.com/googlecartographer/cartographer
-.. _SLAM: https://en.wikipedia.org/wiki/Simultaneous_localization_and_mapping
+More information about Magazino: https://www.magazino.eu/?lang=en
 
-Open house
-==========
 
-We regularly meet in an open-for-all Google hangout to discuss progress and plans for Cartographer.
-
-The next Cartographer Open House Hangout is on Thursday, October 12, 5pm CEST (8am PST) [`Hangouts link`_].
-
-.. _Hangouts link: https://staging.talkgadget.google.com/hangouts/_/google.com/cartographeropenhouse
-
-- September 14, 2017: `Slides <https://storage.googleapis.com/cartographer-public-data/cartographer-open-house/170914/slides.pdf>`_
-- August 17, 2017: `Slides <https://storage.googleapis.com/cartographer-public-data/cartographer-open-house/170817/slides.pdf>`_
-- July 20, 2017: `Slides <https://storage.googleapis.com/cartographer-public-data/cartographer-open-house/170720/slides.pdf>`_
-- July 6, 2017: `Slides <https://storage.googleapis.com/cartographer-public-data/cartographer-open-house/170706/slides.pdf>`_
-- June 22, 2017: `Slides <https://storage.googleapis.com/cartographer-public-data/cartographer-open-house/170622/sildes.pdf>`_
-- June 8, 2017: `Slides <https://storage.googleapis.com/cartographer-public-data/cartographer-open-house/170608/slides.pdf>`_
-
-Getting started
-===============
-
-* Learn to use Cartographer at `our Read the Docs site`_.
-* Please join the `mailing list`_ and ask questions.
-
-.. _our Read the Docs site: https://google-cartographer.readthedocs.io
-.. _mailing list: https://groups.google.com/forum/#!forum/google-cartographer
-
-Contributing
-============
-
-You can find information about contributing to Cartographer at `our Contribution
-page`_.
-
-.. _our Contribution page: https://github.com/googlecartographer/cartographer/blob/master/CONTRIBUTING.md
-
-.. |build| image:: https://travis-ci.org/googlecartographer/cartographer.svg?branch=master
-    :alt: Build Status
-    :scale: 100%
-    :target: https://travis-ci.org/googlecartographer/cartographer
-.. |docs| image:: https://readthedocs.org/projects/google-cartographer/badge/?version=latest
-    :alt: Documentation Status
-    :scale: 100%
-    :target: https://google-cartographer.readthedocs.io/en/latest/?badge=latest
-.. |license| image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
-     :alt: Apache 2 license.
-     :scale: 100%
-     :target: https://github.com/googlecartographer/cartographer/blob/master/LICENSE
-.. |video| image:: https://j.gifs.com/wp3BJM.gif
-    :alt: Cartographer 3D SLAM Demo
-    :scale: 100%
-    :target: https://youtu.be/DM0dpHLhtX0
+.. _googlecartographer: https://github.com/googlecartographer
