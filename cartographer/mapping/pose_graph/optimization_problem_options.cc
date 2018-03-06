@@ -30,6 +30,8 @@ proto::OptimizationProblemOptions CreateOptimizationProblemOptions(
       parameter_dictionary->GetDouble("acceleration_weight"));
   options.set_rotation_weight(
       parameter_dictionary->GetDouble("rotation_weight"));
+  options.set_disable_odometry(
+      parameter_dictionary->GetBool("disable_odometry"));
   options.set_consecutive_node_translation_weight(
       parameter_dictionary->GetDouble("consecutive_node_translation_weight"));
   options.set_consecutive_node_rotation_weight(

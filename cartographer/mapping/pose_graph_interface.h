@@ -73,6 +73,12 @@ class PoseGraphInterface {
     transform::Rigid3d pose;
   };
 
+  struct TrajectoryData {
+    double gravity_constant = 9.8;
+    std::array<double, 4> imu_calibration{{1., 0., 0., 0.}};
+    common::optional<transform::Rigid3d> fixed_frame_origin_in_map;
+  };
+
   PoseGraphInterface() {}
   virtual ~PoseGraphInterface() {}
 
@@ -104,6 +110,9 @@ class PoseGraphInterface {
 
   // Checks if the given trajectory is finished.
   virtual bool IsTrajectoryFinished(int trajectory_id) = 0;
+
+  // Returns the trajectory data.
+  virtual std::map<int, TrajectoryData> GetTrajectoryData() = 0;
 
   // Returns the collection of constraints.
   virtual std::vector<Constraint> constraints() = 0;

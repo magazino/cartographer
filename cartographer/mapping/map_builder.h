@@ -23,10 +23,9 @@
 #include <set>
 
 #include "cartographer/common/thread_pool.h"
-#include "cartographer/mapping/pose_graph_interface.h"
+#include "cartographer/mapping/2d/pose_graph_2d.h"
+#include "cartographer/mapping/3d/pose_graph_3d.h"
 #include "cartographer/mapping/proto/map_builder_options.pb.h"
-#include "cartographer/mapping_2d/pose_graph.h"
-#include "cartographer/mapping_3d/pose_graph.h"
 #include "cartographer/sensor/collator_interface.h"
 
 namespace cartographer {
@@ -40,7 +39,7 @@ proto::MapBuilderOptions CreateMapBuilderOptions(
 class MapBuilder : public MapBuilderInterface {
  public:
   explicit MapBuilder(const proto::MapBuilderOptions& options);
-  ~MapBuilder() override;
+  ~MapBuilder() override {}
 
   MapBuilder(const MapBuilder&) = delete;
   MapBuilder& operator=(const MapBuilder&) = delete;
@@ -64,7 +63,8 @@ class MapBuilder : public MapBuilderInterface {
 
   void SerializeState(io::ProtoStreamWriterInterface* writer) override;
 
-  void LoadMap(io::ProtoStreamReaderInterface* reader) override;
+  void LoadState(io::ProtoStreamReaderInterface* reader,
+                 bool load_frozen_state) override;
 
   int num_trajectory_builders() const override;
 
@@ -77,8 +77,8 @@ class MapBuilder : public MapBuilderInterface {
   const proto::MapBuilderOptions options_;
   common::ThreadPool thread_pool_;
 
-  std::unique_ptr<mapping_2d::PoseGraph> pose_graph_2d_;
-  std::unique_ptr<mapping_3d::PoseGraph> pose_graph_3d_;
+  std::unique_ptr<PoseGraph2D> pose_graph_2d_;
+  std::unique_ptr<PoseGraph3D> pose_graph_3d_;
   mapping::PoseGraph* pose_graph_;
 
   std::unique_ptr<sensor::CollatorInterface> sensor_collator_;

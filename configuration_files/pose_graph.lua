@@ -65,6 +65,7 @@ POSE_GRAPH = {
     huber_scale = 1e1,
     acceleration_weight = 1e3,
     rotation_weight = 3e5,
+    disable_odometry = false,
     consecutive_node_translation_weight = 1e5,
     consecutive_node_rotation_weight = 1e5,
     fixed_frame_pose_translation_weight = 1e1,
