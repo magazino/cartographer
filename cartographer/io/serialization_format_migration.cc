@@ -72,9 +72,20 @@ mapping::proto::Submap MaybeMigrateLegacySubmap2d(
     submap_2d.set_finished(submap_in.submap_2d().finished());
 
     // grid() is a disguised legacy probability_grid() - migrate it.
-    std::string submap_binary;
-    submap_in.submap_2d().grid().SerializeToString(&submap_binary);
-    submap_2d.mutable_grid()->ParseFromString(submap_binary);
+    // We can't directly convert it because the proto field numbers were changed
+    // in a non-compatible way :( ---> known_cells_box was 8, now 3 .... meh
+    std::string probability_grid_binary;
+    submap_in.submap_2d().grid().SerializeToString(&probability_grid_binary);
+    mapping::proto::LegacyProbabilityGrid tmp;
+    tmp.ParseFromString(probability_grid_binary);
+    *submap_2d.mutable_grid()->mutable_limits() = tmp.limits();
+    submap_2d.mutable_grid()->mutable_cells()->CopyFrom(tmp.cells());
+
+    // TODO: these make problems:
+
+    *submap_2d.mutable_grid()->mutable_known_cells_box() =
+        dynamic_cast<mapping::proto::Grid2D_CellBox&>(
+            tmp.mutable_known_cells_box());
     submap_2d.mutable_grid()->mutable_probability_grid_2d();
 
     mapping::proto::Submap submap_out;
