@@ -79,14 +79,18 @@ mapping::proto::Submap MaybeMigrateLegacySubmap2d(
     mapping::proto::LegacyProbabilityGrid tmp;
     tmp.ParseFromString(probability_grid_binary);
     *submap_2d.mutable_grid()->mutable_limits() = tmp.limits();
-    submap_2d.mutable_grid()->mutable_cells()->CopyFrom(tmp.cells());
+    *submap_2d.mutable_grid()->mutable_cells() = tmp.cells();
 
     // TODO: these make problems:
 
-    *submap_2d.mutable_grid()->mutable_known_cells_box() =
-        const_cast<mapping::proto::Grid2D_CellBox&>(
-          reinterpret_cast<const mapping::proto::Grid2D_CellBox&>(
-            tmp.known_cells_box()));
+    submap_2d.mutable_grid()->mutable_known_cells_box()->set_max_x(
+        tmp.known_cells_box().max_x());
+    submap_2d.mutable_grid()->mutable_known_cells_box()->set_max_y(
+        tmp.known_cells_box().max_y());
+    submap_2d.mutable_grid()->mutable_known_cells_box()->set_min_x(
+        tmp.known_cells_box().min_x());
+    submap_2d.mutable_grid()->mutable_known_cells_box()->set_min_y(
+        tmp.known_cells_box().min_y());
     submap_2d.mutable_grid()->mutable_probability_grid_2d();
 
     mapping::proto::Submap submap_out;
