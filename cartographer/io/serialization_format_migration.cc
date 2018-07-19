@@ -84,8 +84,9 @@ mapping::proto::Submap MaybeMigrateLegacySubmap2d(
     // TODO: these make problems:
 
     *submap_2d.mutable_grid()->mutable_known_cells_box() =
-        dynamic_cast<mapping::proto::Grid2D_CellBox&>(
-            tmp.mutable_known_cells_box());
+        const_cast<mapping::proto::Grid2D_CellBox&>(
+          reinterpret_cast<const mapping::proto::Grid2D_CellBox&>(
+            tmp.known_cells_box()));
     submap_2d.mutable_grid()->mutable_probability_grid_2d();
 
     mapping::proto::Submap submap_out;
