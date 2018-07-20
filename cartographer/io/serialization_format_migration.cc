@@ -20,6 +20,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "cartographer/common/math.h"
 #include "cartographer/mapping/2d/submap_2d.h"
 #include "cartographer/mapping/proto/internal/legacy_probability_grid.pb.h"
 #include "cartographer/mapping/proto/internal/legacy_serialized_data.pb.h"
@@ -83,12 +84,17 @@ mapping::proto::Submap MaybeMigrateLegacySubmap2d(
     //CHECK_NE(tmp.num_range_data(), 0);
     //CHECK_NE(tmp.finished(), 0);
     CHECK(submap_in.submap_2d().has_probability_grid());
-    *submap_2d.mutable_grid()->mutable_limits() = submap_in.submap_2d().probability_grid().limits();
+    submap_2d.mutable_grid()->mutable_limits()->CopyFrom(submap_in.submap_2d().probability_grid().limits());
     submap_2d.mutable_grid()->mutable_cells()->CopyFrom(submap_in.submap_2d().probability_grid().cells());
 
+    for (auto& cell : *submap_2d.mutable_grid()->mutable_cells()) {
+      cell = -1 * cell;
+    }
+
     // TODO: these make problems:
-    LOG(INFO) << std::to_string(submap_in.submap_2d().probability_grid().known_cells_box().max_y());
+    //LOG(INFO) << std::to_string(submap_in.submap_2d().probability_grid().known_cells_box().max_y());
     //LOG(INFO) << std::to_string(tmp.probability_grid().known_cells_box().max_y());
+
     submap_2d.mutable_grid()->mutable_known_cells_box()->set_max_x(
         submap_in.submap_2d().probability_grid().known_cells_box().max_x());
     submap_2d.mutable_grid()->mutable_known_cells_box()->set_max_y(
@@ -98,6 +104,8 @@ mapping::proto::Submap MaybeMigrateLegacySubmap2d(
     submap_2d.mutable_grid()->mutable_known_cells_box()->set_min_y(
         submap_in.submap_2d().probability_grid().known_cells_box().min_y());
     
+    //submap_2d.mutable_grid()->set_max_correspondence_cost(0);
+    //submap_2d.mutable_grid()->set_min_correspondence_cost(-1);
     submap_2d.mutable_grid()->mutable_probability_grid_2d();
 
 
