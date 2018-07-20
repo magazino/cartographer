@@ -64,8 +64,9 @@ bool HasLegacyProbabilityGrid2d(const mapping::proto::Submap& submap) {
 }
 
 mapping::proto::Submap MaybeMigrateLegacySubmap2d(
-    const mapping::proto::Submap& submap_in) {
-  if (HasLegacyProbabilityGrid2d(submap_in)) {
+    const mapping::proto::LegacySubmap& submap_in) {
+  if (true) {
+  //if (HasLegacyProbabilityGrid2d(submap_in)) {
     mapping::proto::Submap2D submap_2d;
     *submap_2d.mutable_local_pose() = submap_in.submap_2d().local_pose();
     submap_2d.set_num_range_data(submap_in.submap_2d().num_range_data());
@@ -74,24 +75,31 @@ mapping::proto::Submap MaybeMigrateLegacySubmap2d(
     // grid() is a disguised legacy probability_grid() - migrate it.
     // We can't directly convert it because the proto field numbers were changed
     // in a non-compatible way :( ---> known_cells_box was 8, now 3 .... meh
-    std::string probability_grid_binary;
-    submap_in.submap_2d().grid().SerializeToString(&probability_grid_binary);
-    mapping::proto::LegacyProbabilityGrid tmp;
-    tmp.ParseFromString(probability_grid_binary);
-    *submap_2d.mutable_grid()->mutable_limits() = tmp.limits();
-    *submap_2d.mutable_grid()->mutable_cells() = tmp.cells();
+    //std::string probability_grid_binary;
+    //submap_in.submap_2d().SerializeToString(&probability_grid_binary);
+    //mapping::proto::LegacySubmap2D tmp;
+    //tmp.ParseFromString(probability_grid_binary);
+    //CHECK(tmp.has_local_pose());
+    //CHECK_NE(tmp.num_range_data(), 0);
+    //CHECK_NE(tmp.finished(), 0);
+    CHECK(submap_in.submap_2d().has_probability_grid());
+    *submap_2d.mutable_grid()->mutable_limits() = submap_in.submap_2d().probability_grid().limits();
+    submap_2d.mutable_grid()->mutable_cells()->CopyFrom(submap_in.submap_2d().probability_grid().cells());
 
     // TODO: these make problems:
-
+    LOG(INFO) << std::to_string(submap_in.submap_2d().probability_grid().known_cells_box().max_y());
+    //LOG(INFO) << std::to_string(tmp.probability_grid().known_cells_box().max_y());
     submap_2d.mutable_grid()->mutable_known_cells_box()->set_max_x(
-        tmp.known_cells_box().max_x());
+        submap_in.submap_2d().probability_grid().known_cells_box().max_x());
     submap_2d.mutable_grid()->mutable_known_cells_box()->set_max_y(
-        tmp.known_cells_box().max_y());
+        submap_in.submap_2d().probability_grid().known_cells_box().max_y());
     submap_2d.mutable_grid()->mutable_known_cells_box()->set_min_x(
-        tmp.known_cells_box().min_x());
+        submap_in.submap_2d().probability_grid().known_cells_box().min_x());
     submap_2d.mutable_grid()->mutable_known_cells_box()->set_min_y(
-        tmp.known_cells_box().min_y());
+        submap_in.submap_2d().probability_grid().known_cells_box().min_y());
+    
     submap_2d.mutable_grid()->mutable_probability_grid_2d();
+
 
     mapping::proto::Submap submap_out;
     *submap_out.mutable_submap_2d() = submap_2d;
@@ -99,7 +107,7 @@ mapping::proto::Submap MaybeMigrateLegacySubmap2d(
     return submap_out;
   } else {
     // Already in newer format - nothing to do.
-    return submap_in;
+    return mapping::proto::Submap();
   }
 }
 

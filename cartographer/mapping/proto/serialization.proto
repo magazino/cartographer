@@ -22,11 +22,18 @@ import "cartographer/mapping/proto/trajectory_node_data.proto";
 import "cartographer/sensor/proto/sensor.proto";
 import "cartographer/mapping/proto/trajectory_builder_options.proto";
 import "cartographer/transform/proto/transform.proto";
+import "cartographer/mapping/proto/internal/legacy_submap.proto";
 
 message Submap {
   SubmapId submap_id = 1;
   Submap2D submap_2d = 2;
   Submap3D submap_3d = 3;
+}
+
+message LegacySubmap {
+  SubmapId submap_id = 1;
+  LegacySubmap2D submap_2d = 2;
+  LegacySubmap3D submap_3d = 3;
 }
 
 message Node {
