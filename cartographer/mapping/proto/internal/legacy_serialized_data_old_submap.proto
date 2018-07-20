@@ -18,8 +18,8 @@ package cartographer.mapping.proto;
 
 import "cartographer/mapping/proto/serialization.proto";
 
-message LegacySerializedData {
-  Submap submap = 1;
+message LegacySerializedDataOldSubmap {
+  LegacySubmap submap = 1;
   Node node = 2;
   ImuData imu_data = 3;
   OdometryData odometry_data = 4;
