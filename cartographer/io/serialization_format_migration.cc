@@ -23,7 +23,7 @@
 #include "cartographer/common/math.h"
 #include "cartographer/mapping/2d/submap_2d.h"
 #include "cartographer/mapping/probability_values.h"
-#include "cartographer/mapping/proto/internal/legacy_probability_grid.pb.h"
+//#include "cartographer/mapping/proto/internal/legacy_probability_grid.pb.h"
 #include "cartographer/mapping/proto/internal/legacy_serialized_data.pb.h"
 #include "cartographer/mapping/proto/internal/legacy_serialized_data_old_submap.pb.h"
 #include "cartographer/mapping/proto/internal/legacy_submap.pb.h"
@@ -91,8 +91,8 @@ mapping::proto::Submap MigrateLegacySubmap2d(
       submap_in.submap_2d().probability_grid().known_cells_box().min_y());
 
   // Correspondence costs can be safely set to standard values.
-  // Otherwise, this would be done during next deserialization, but with a
-  // warning.
+  // Otherwise, this would be done during the next deserialization, but with a
+  // warning, which we can avoid by setting it already here.
   submap_2d.mutable_grid()->set_max_correspondence_cost(
       mapping::kMaxCorrespondenceCost);
   submap_2d.mutable_grid()->set_min_correspondence_cost(

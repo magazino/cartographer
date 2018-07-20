@@ -28,10 +28,8 @@ float MinCorrespondenceCostFromProto(const proto::Grid2D& proto) {
         << "proto::Grid2D: min_correspondence_cost "
            "is initialized with 0 indicating an older version of the "
            "protobuf format. Loading default values.";
-    LOG(INFO) << std::to_string(kMinCorrespondenceCost);
     return kMinCorrespondenceCost;
   } else {
-    LOG(INFO) << std::to_string(proto.min_correspondence_cost());
     return proto.min_correspondence_cost();
   }
 }
@@ -43,10 +41,8 @@ float MaxCorrespondenceCostFromProto(const proto::Grid2D& proto) {
         << "proto::Grid2D: max_correspondence_cost "
            "is initialized with 0 indicating an older version of the "
            "protobuf format. Loading default values.";
-    LOG(INFO) << std::to_string(kMaxCorrespondenceCost);
     return kMaxCorrespondenceCost;
   } else {
-    LOG(INFO) << std::to_string(proto.max_correspondence_cost());
     return proto.max_correspondence_cost();
   }
 }
