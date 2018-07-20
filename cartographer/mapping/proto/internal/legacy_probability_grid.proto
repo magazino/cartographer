@@ -18,6 +18,9 @@ package cartographer.mapping.proto;
 
 import "cartographer/mapping/proto/2d/map_limits.proto";
 
+// The legacy probability grid that was used before the generalized
+// grid structure was introduced.
+
 message LegacyProbabilityGrid {
   message CellBox {
     int32 max_x = 1;

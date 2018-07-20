@@ -23,7 +23,6 @@
 #include "cartographer/common/math.h"
 #include "cartographer/mapping/2d/submap_2d.h"
 #include "cartographer/mapping/probability_values.h"
-//#include "cartographer/mapping/proto/internal/legacy_probability_grid.pb.h"
 #include "cartographer/mapping/proto/internal/legacy_serialized_data.pb.h"
 #include "cartographer/mapping/proto/internal/legacy_serialized_data_old_submap.pb.h"
 #include "cartographer/mapping/proto/internal/legacy_submap.pb.h"
