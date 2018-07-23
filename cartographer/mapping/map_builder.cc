@@ -383,6 +383,7 @@ std::map<int, int> MapBuilder::LoadState(
         FromProto(pose_graph_proto.constraint()));
   }
   CHECK(reader->eof());
+  LOG(INFO) << "Successfully loaded state.";
   return trajectory_remapping;
 }
 
