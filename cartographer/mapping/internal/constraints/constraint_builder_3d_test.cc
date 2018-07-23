@@ -63,7 +63,9 @@ TEST_F(ConstraintBuilder3DTest, CallsBack) {
   EXPECT_CALL(mock_, Run(::testing::IsEmpty()));
   constraint_builder_->NotifyEndOfNode();
   constraint_builder_->WhenDone(
-      std::bind(&MockCallback::Run, &mock_, std::placeholders::_1));
+      [this](const constraints::ConstraintBuilder3D::Result& result) {
+        mock_.Run(result);
+      });
   thread_pool_.WaitUntilIdle();
   EXPECT_EQ(constraint_builder_->GetNumFinishedNodes(), 1);
 }
@@ -87,12 +89,14 @@ TEST_F(ConstraintBuilder3DTest, FindsConstraints) {
     EXPECT_EQ(constraint_builder_->GetNumFinishedNodes(), expected_nodes);
     for (int j = 0; j < 2; ++j) {
       constraint_builder_->MaybeAddConstraint(
-          submap_id, &submap, NodeId{}, node.constant_data.get(), submap_nodes,
-          transform::Rigid3d::Identity(), transform::Rigid3d::Identity());
+          submap_id, &submap, NodeId{0, 0}, node.constant_data.get(),
+          submap_nodes, transform::Rigid3d::Identity(),
+          transform::Rigid3d::Identity());
     }
     constraint_builder_->MaybeAddGlobalConstraint(
-        submap_id, &submap, NodeId{}, node.constant_data.get(), submap_nodes,
-        Eigen::Quaterniond::Identity(), Eigen::Quaterniond::Identity());
+        submap_id, &submap, NodeId{0, 0}, node.constant_data.get(),
+        submap_nodes, Eigen::Quaterniond::Identity(),
+        Eigen::Quaterniond::Identity());
     constraint_builder_->NotifyEndOfNode();
     thread_pool_.WaitUntilIdle();
     EXPECT_EQ(constraint_builder_->GetNumFinishedNodes(), ++expected_nodes);
@@ -106,7 +110,9 @@ TEST_F(ConstraintBuilder3DTest, FindsConstraints) {
                         &PoseGraphInterface::Constraint::tag,
                         PoseGraphInterface::Constraint::INTER_SUBMAP)))));
     constraint_builder_->WhenDone(
-        std::bind(&MockCallback::Run, &mock_, std::placeholders::_1));
+        [this](const constraints::ConstraintBuilder3D::Result& result) {
+          mock_.Run(result);
+        });
     thread_pool_.WaitUntilIdle();
     constraint_builder_->DeleteScanMatcher(submap_id);
   }

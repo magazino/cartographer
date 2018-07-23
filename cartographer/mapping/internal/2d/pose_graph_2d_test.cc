@@ -62,8 +62,21 @@ class PoseGraph2DTest : public ::testing::Test {
                 hit_probability = 0.53,
                 miss_probability = 0.495,
               },
+            tsdf_range_data_inserter = {
+              truncation_distance = 0.3,
+              maximum_weight = 10.,
+              update_free_space = false,
+              normal_estimation_options = {
+                num_normal_samples = 4,
+                sample_radius = 0.5,
+              },
+              project_sdf_distance_to_scan_normal = false,
+              update_weight_range_exponent = 0,
+              update_weight_angle_scan_normal_to_ray_kernel_bandwith = 0,
+              update_weight_distance_cell_to_hit_kernel_bandwith = 0,
             },
-          })text");
+          },
+        })text");
       active_submaps_ = common::make_unique<ActiveSubmaps2D>(
           mapping::CreateSubmapsOptions2D(parameter_dictionary.get()));
     }
@@ -158,17 +171,16 @@ class PoseGraph2DTest : public ::testing::Test {
     const sensor::PointCloud new_point_cloud = sensor::TransformPointCloud(
         point_cloud_,
         transform::Embed3D(current_pose_.inverse().cast<float>()));
-    std::vector<std::shared_ptr<const Submap2D>> insertion_submaps;
-    for (const auto& submap : active_submaps_->submaps()) {
-      insertion_submaps.push_back(submap);
-    }
     const sensor::RangeData range_data{
         Eigen::Vector3f::Zero(), new_point_cloud, {}};
     const transform::Rigid2d pose_estimate = noise * current_pose_;
     constexpr int kTrajectoryId = 0;
     active_submaps_->InsertRangeData(TransformRangeData(
         range_data, transform::Embed3D(pose_estimate.cast<float>())));
-
+    std::vector<std::shared_ptr<const Submap2D>> insertion_submaps;
+    for (const auto& submap : active_submaps_->submaps()) {
+      insertion_submaps.push_back(submap);
+    }
     pose_graph_->AddNode(
         std::make_shared<const TrajectoryNode::Data>(
             TrajectoryNode::Data{common::FromUniversal(0),

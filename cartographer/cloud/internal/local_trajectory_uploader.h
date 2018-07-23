@@ -44,11 +44,16 @@ class LocalTrajectoryUploaderInterface {
   // Enqueue an Add*DataRequest message to be uploaded.
   virtual void EnqueueSensorData(
       std::unique_ptr<proto::SensorData> sensor_data) = 0;
-  virtual void AddTrajectory(
-      int local_trajectory_id, const std::set<SensorId>& expected_sensor_ids,
-      const mapping::proto::TrajectoryBuilderOptions& trajectory_options) = 0;
-  virtual void FinishTrajectory(int local_trajectory_id) = 0;
 
+  // Creates a new trajectory with the specified settings in the uplink. A
+  // return value of 'false' indicates that the creation failed.
+  virtual bool AddTrajectory(
+      const std::string& client_id, int local_trajectory_id,
+      const std::set<SensorId>& expected_sensor_ids,
+      const mapping::proto::TrajectoryBuilderOptions& trajectory_options) = 0;
+
+  virtual void FinishTrajectory(const std::string& client_id,
+                                int local_trajectory_id) = 0;
   virtual SensorId GetLocalSlamResultSensorId(
       int local_trajectory_id) const = 0;
 };
@@ -56,7 +61,7 @@ class LocalTrajectoryUploaderInterface {
 // Returns LocalTrajectoryUploader with the actual implementation.
 std::unique_ptr<LocalTrajectoryUploaderInterface> CreateLocalTrajectoryUploader(
     const std::string& uplink_server_address, int batch_size,
-    bool enable_ssl_encryption);
+    bool enable_ssl_encryption, const std::string& token_file_path);
 
 }  // namespace cloud
 }  // namespace cartographer

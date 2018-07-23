@@ -36,9 +36,12 @@
 #include "cartographer/mapping/internal/constraints/constraint_builder_2d.h"
 #include "cartographer/mapping/internal/optimization/optimization_problem_2d.h"
 #include "cartographer/mapping/internal/trajectory_connectivity_state.h"
+#include "cartographer/mapping/internal/work_queue.h"
 #include "cartographer/mapping/pose_graph.h"
 #include "cartographer/mapping/pose_graph_data.h"
 #include "cartographer/mapping/pose_graph_trimmer.h"
+#include "cartographer/mapping/value_conversion_tables.h"
+#include "cartographer/metrics/family_factory.h"
 #include "cartographer/sensor/fixed_frame_pose_data.h"
 #include "cartographer/sensor/landmark_data.h"
 #include "cartographer/sensor/odometry_data.h"
@@ -149,15 +152,26 @@ class PoseGraph2D : public PoseGraph {
   transform::Rigid3d GetInterpolatedGlobalTrajectoryPose(
       int trajectory_id, const common::Time time) const REQUIRES(mutex_);
 
+  static void RegisterMetrics(metrics::FamilyFactory* family_factory);
+
  private:
   MapById<SubmapId, PoseGraphInterface::SubmapData> GetSubmapDataUnderLock()
       const REQUIRES(mutex_);
 
   // Handles a new work item.
-  void AddWorkItem(const std::function<void()>& work_item) REQUIRES(mutex_);
+  void AddWorkItem(const std::function<WorkItem::Result()>& work_item)
+      EXCLUDES(mutex_);
 
   // Adds connectivity and sampler for a trajectory if it does not exist.
   void AddTrajectoryIfNeeded(int trajectory_id) REQUIRES(mutex_);
+
+  // Appends the new node and submap (if needed) to the internal data
+  // structures.
+  NodeId AppendNode(
+      std::shared_ptr<const TrajectoryNode::Data> constant_data,
+      int trajectory_id,
+      const std::vector<std::shared_ptr<const Submap2D>>& insertion_submaps,
+      const transform::Rigid3d& optimized_pose) EXCLUDES(mutex_);
 
   // Grows the optimization problem to have an entry for every element of
   // 'insertion_submaps'. Returns the IDs for the 'insertion_submaps'.
@@ -167,10 +181,10 @@ class PoseGraph2D : public PoseGraph {
       REQUIRES(mutex_);
 
   // Adds constraints for a node, and starts scan matching in the background.
-  void ComputeConstraintsForNode(
+  WorkItem::Result ComputeConstraintsForNode(
       const NodeId& node_id,
       std::vector<std::shared_ptr<const Submap2D>> insertion_submaps,
-      bool newly_finished_submap) REQUIRES(mutex_);
+      bool newly_finished_submap) EXCLUDES(mutex_);
 
   // Computes constraints for a node and submap pair.
   void ComputeConstraint(const NodeId& node_id, const SubmapId& submap_id)
@@ -186,7 +200,7 @@ class PoseGraph2D : public PoseGraph {
 
   // Runs the optimization, executes the trimmers and processes the work queue.
   void HandleWorkQueue(const constraints::ConstraintBuilder2D::Result& result)
-      REQUIRES(mutex_);
+      EXCLUDES(mutex_);
 
   // Waits until we caught up (i.e. nothing is waiting to be scheduled), and
   // all computations have finished.
@@ -221,8 +235,7 @@ class PoseGraph2D : public PoseGraph {
 
   // If it exists, further work items must be added to this queue, and will be
   // considered later.
-  std::unique_ptr<std::deque<std::function<void()>>> work_queue_
-      GUARDED_BY(mutex_);
+  std::unique_ptr<WorkQueue> work_queue_ GUARDED_BY(mutex_);
 
   // We globally localize a fraction of the nodes from each trajectory.
   std::unordered_map<int, std::unique_ptr<common::FixedRatioSampler>>
@@ -231,20 +244,16 @@ class PoseGraph2D : public PoseGraph {
   // Number of nodes added since last loop closure.
   int num_nodes_since_last_loop_closure_ GUARDED_BY(mutex_) = 0;
 
-  // Whether the optimization has to be run before more data is added.
-  bool run_loop_closure_ GUARDED_BY(mutex_) = false;
-
-  // Schedules optimization (i.e. loop closure) to run.
-  void DispatchOptimization() REQUIRES(mutex_);
-
   // Current optimization problem.
   std::unique_ptr<optimization::OptimizationProblem2D> optimization_problem_;
-  constraints::ConstraintBuilder2D constraint_builder_ GUARDED_BY(mutex_);
+  constraints::ConstraintBuilder2D constraint_builder_;
 
   // List of all trimmers to consult when optimizations finish.
   std::vector<std::unique_ptr<PoseGraphTrimmer>> trimmers_ GUARDED_BY(mutex_);
 
   PoseGraphData data_ GUARDED_BY(mutex_);
+
+  ValueConversionTables conversion_tables_;
 
   // Allows querying and manipulating the pose graph by the 'trimmers_'. The
   // 'mutex_' of the pose graph is held while this class is used.

@@ -22,6 +22,7 @@ set(CARTOGRAPHER_PATCH_VERSION 0)
 set(CARTOGRAPHER_VERSION ${CARTOGRAPHER_MAJOR_VERSION}.${CARTOGRAPHER_MINOR_VERSION}.${CARTOGRAPHER_PATCH_VERSION})
 set(CARTOGRAPHER_SOVERSION ${CARTOGRAPHER_MAJOR_VERSION}.${CARTOGRAPHER_MINOR_VERSION})
 option(BUILD_GRPC "build Cartographer gRPC support" false)
+set(CARTOGRAPHER_HAS_GRPC ${BUILD_GRPC})
 option(BUILD_PROMETHEUS "build Prometheus monitoring support" false)
 
 include("${PROJECT_SOURCE_DIR}/cmake/functions.cmake")
@@ -182,6 +183,11 @@ google_binary(cartographer_compute_relations_metrics
 google_binary(cartographer_migrate_serialization_format
   SRCS
     cartographer/io/migrate_serialization_format_main.cc
+)
+
+google_binary(cartographer_pbstream_info
+  SRCS
+  cartographer/io/pbstream_info_main.cc
 )
 
 if(${BUILD_GRPC})
