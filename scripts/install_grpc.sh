@@ -24,5 +24,5 @@ VERSION="v1.10.0"
 git clone --branch ${VERSION} --depth 1 https://github.com/grpc/grpc
 cd grpc
 git submodule update --init
-make
+make -j4 HAS_SYSTEM_PROTOBUF=false
 sudo make install
