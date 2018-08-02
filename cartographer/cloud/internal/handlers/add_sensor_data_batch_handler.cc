@@ -120,7 +120,6 @@ AddSensorDataBatchHandler::ClientMetrics*
 AddSensorDataBatchHandler::GetOrCreateClientMetrics(
     const std::string& client_id, int trajectory_id) {
   const std::string map_key = client_id + std::to_string(trajectory_id);
-  LOG(INFO) << "map_key: " << map_key;
   auto client_metric_map_itr = client_metric_map_.find(map_key);
   if (client_metric_map_itr != client_metric_map_.end()) {
     return client_metric_map_itr->second.get();
