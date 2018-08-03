@@ -17,7 +17,7 @@
 
 #include <limits>
 
-#include "cartographer/common/make_unique.h"
+#include "absl/memory/memory.h"
 #include "cartographer/mapping/probability_values.h"
 #include "cartographer/mapping/submaps.h"
 
@@ -70,6 +70,10 @@ bool ProbabilityGrid::ApplyLookupTable(const Eigen::Array2i& cell_index,
   return true;
 }
 
+GridType ProbabilityGrid::GetGridType() const {
+  return GridType::PROBABILITY_GRID;
+}
+
 // Returns the probability of the cell with 'cell_index'.
 float ProbabilityGrid::GetProbability(const Eigen::Array2i& cell_index) const {
   if (!limits().Contains(cell_index)) return kMinProbability;
@@ -92,7 +96,7 @@ std::unique_ptr<Grid2D> ProbabilityGrid::ComputeCroppedGrid() const {
   const Eigen::Vector2d max =
       limits().max() - resolution * Eigen::Vector2d(offset.y(), offset.x());
   std::unique_ptr<ProbabilityGrid> cropped_grid =
-      common::make_unique<ProbabilityGrid>(
+      absl::make_unique<ProbabilityGrid>(
           MapLimits(resolution, max, cell_limits), conversion_tables_);
   for (const Eigen::Array2i& xy_index : XYIndexRangeIterator(cell_limits)) {
     if (!IsKnown(xy_index + offset)) continue;

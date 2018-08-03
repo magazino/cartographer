@@ -57,8 +57,7 @@ class PoseGraph3DForTesting : public PoseGraph3D {
 
 class PoseGraph3DTest : public ::testing::Test {
  protected:
-  PoseGraph3DTest()
-      : thread_pool_(common::make_unique<common::ThreadPool>(1)) {}
+  PoseGraph3DTest() : thread_pool_(absl::make_unique<common::ThreadPool>(1)) {}
 
   void SetUp() override {
     const std::string kPoseGraphLua = R"text(
@@ -70,17 +69,16 @@ class PoseGraph3DTest : public ::testing::Test {
 
   void BuildPoseGraph() {
     auto optimization_problem =
-        common::make_unique<optimization::OptimizationProblem3D>(
+        absl::make_unique<optimization::OptimizationProblem3D>(
             pose_graph_options_.optimization_problem_options());
-    pose_graph_ = common::make_unique<PoseGraph3DForTesting>(
+    pose_graph_ = absl::make_unique<PoseGraph3DForTesting>(
         pose_graph_options_, std::move(optimization_problem),
         thread_pool_.get());
   }
 
   void BuildPoseGraphWithFakeOptimization() {
-    auto optimization_problem =
-        common::make_unique<MockOptimizationProblem3D>();
-    pose_graph_ = common::make_unique<PoseGraph3DForTesting>(
+    auto optimization_problem = absl::make_unique<MockOptimizationProblem3D>();
+    pose_graph_ = absl::make_unique<PoseGraph3DForTesting>(
         pose_graph_options_, std::move(optimization_problem),
         thread_pool_.get());
   }
@@ -102,7 +100,7 @@ TEST_F(PoseGraph3DTest, Empty) {
   EXPECT_TRUE(pose_graph_->GetTrajectoryData().empty());
   proto::PoseGraph empty_proto;
   EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
-      pose_graph_->ToProto(), empty_proto));
+      pose_graph_->ToProto(/*include_unfinished_submaps=*/true), empty_proto));
 }
 
 TEST_F(PoseGraph3DTest, BasicSerialization) {
@@ -121,7 +119,8 @@ TEST_F(PoseGraph3DTest, BasicSerialization) {
       testing::CreateFakeLandmark("landmark_id", Rigid3d::Identity()), &proto);
   pose_graph_->SetLandmarkPose("landmark_id", Rigid3d::Identity());
   pose_graph_->WaitForAllComputations();
-  proto::PoseGraph actual_proto = pose_graph_->ToProto();
+  proto::PoseGraph actual_proto =
+      pose_graph_->ToProto(/*include_unfinished_submaps=*/true);
   EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
       proto.constraint(0), actual_proto.constraint(0)));
   EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
@@ -134,6 +133,59 @@ TEST_F(PoseGraph3DTest, BasicSerialization) {
       proto.landmark_poses(0), actual_proto.landmark_poses(0)));
   EXPECT_TRUE(
       google::protobuf::util::MessageDifferencer::Equals(proto, actual_proto));
+}
+
+TEST_F(PoseGraph3DTest, SerializationWithUnfinishedSubmaps) {
+  BuildPoseGraph();
+  proto::PoseGraph proto;
+
+  // Create three nodes.
+  auto fake_node_1 = testing::CreateFakeNode(1, 1);
+  testing::AddToProtoGraph(fake_node_1, &proto);
+  pose_graph_->AddNodeFromProto(Rigid3d::Identity(), fake_node_1);
+  auto fake_node_2 = testing::CreateFakeNode(1, 2);
+  testing::AddToProtoGraph(fake_node_2, &proto);
+  pose_graph_->AddNodeFromProto(Rigid3d::Identity(), fake_node_2);
+  auto fake_node_3 = testing::CreateFakeNode(1, 3);
+  testing::AddToProtoGraph(fake_node_3, &proto);
+  pose_graph_->AddNodeFromProto(Rigid3d::Identity(), fake_node_3);
+
+  // Create two submaps: one finished, the other not.
+  auto fake_submap_1 = testing::CreateFakeSubmap3D(1, 1, true);
+  testing::AddToProtoGraph(fake_submap_1, &proto);
+  pose_graph_->AddSubmapFromProto(Rigid3d::Identity(), fake_submap_1);
+  auto fake_submap_2 = testing::CreateFakeSubmap3D(1, 2, false);
+  testing::AddToProtoGraph(fake_submap_2, &proto);
+  pose_graph_->AddSubmapFromProto(Rigid3d::Identity(), fake_submap_2);
+
+  // Connect node 1 to submap 1, node 2 to submaps 1 and 2, node 3 to submap 2.
+  testing::AddToProtoGraph(
+      testing::CreateFakeConstraint(fake_node_1, fake_submap_1), &proto);
+  testing::AddToProtoGraph(
+      testing::CreateFakeConstraint(fake_node_2, fake_submap_1), &proto);
+  testing::AddToProtoGraph(
+      testing::CreateFakeConstraint(fake_node_2, fake_submap_2), &proto);
+  testing::AddToProtoGraph(
+      testing::CreateFakeConstraint(fake_node_3, fake_submap_2), &proto);
+  pose_graph_->AddSerializedConstraints(FromProto(proto.constraint()));
+
+  pose_graph_->WaitForAllComputations();
+  proto::PoseGraph actual_proto =
+      pose_graph_->ToProto(/*include_unfinished_submaps=*/false);
+  EXPECT_EQ(actual_proto.constraint_size(), 2);
+  EXPECT_EQ(actual_proto.trajectory_size(), 1);
+  EXPECT_EQ(actual_proto.trajectory(0).node_size(), 2);
+  EXPECT_EQ(actual_proto.trajectory(0).submap_size(), 1);
+  EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
+      proto.constraint(0), actual_proto.constraint(0)));
+  EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
+      proto.constraint(1), actual_proto.constraint(1)));
+  EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
+      proto.trajectory(0).node(0), actual_proto.trajectory(0).node(0)));
+  EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
+      proto.trajectory(0).node(1), actual_proto.trajectory(0).node(1)));
+  EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
+      proto.trajectory(0).submap(0), actual_proto.trajectory(0).submap(0)));
 }
 
 TEST_F(PoseGraph3DTest, PureLocalizationTrimmer) {
@@ -159,7 +211,7 @@ TEST_F(PoseGraph3DTest, PureLocalizationTrimmer) {
       pose_graph_->AddSerializedConstraints(FromProto(proto.constraint()));
     }
   }
-  pose_graph_->AddTrimmer(common::make_unique<PureLocalizationTrimmer>(
+  pose_graph_->AddTrimmer(absl::make_unique<PureLocalizationTrimmer>(
       trajectory_id, num_submaps_to_keep));
   pose_graph_->WaitForAllComputations();
   EXPECT_EQ(
@@ -236,8 +288,7 @@ TEST_F(PoseGraph3DTest, EvenSubmapTrimmer) {
       pose_graph_->AddSerializedConstraints(FromProto(proto.constraint()));
     }
   }
-  pose_graph_->AddTrimmer(
-      common::make_unique<EvenSubmapTrimmer>(trajectory_id));
+  pose_graph_->AddTrimmer(absl::make_unique<EvenSubmapTrimmer>(trajectory_id));
   pose_graph_->WaitForAllComputations();
   EXPECT_EQ(
       pose_graph_->GetAllSubmapPoses().SizeOfTrajectoryOrZero(trajectory_id),

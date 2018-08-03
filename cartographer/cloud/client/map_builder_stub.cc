@@ -34,7 +34,7 @@ namespace cartographer {
 namespace cloud {
 namespace {
 
-using common::make_unique;
+using absl::make_unique;
 constexpr int kConnectionTimeoutInSeconds = 10;
 
 }  // namespace
@@ -123,7 +123,12 @@ std::string MapBuilderStub::SubmapToProto(
   return client.response().error_msg();
 }
 
-void MapBuilderStub::SerializeState(io::ProtoStreamWriterInterface* writer) {
+void MapBuilderStub::SerializeState(bool include_unfinished_submaps,
+                                    io::ProtoStreamWriterInterface* writer) {
+  if (include_unfinished_submaps) {
+    LOG(WARNING) << "Serializing unfinished submaps is currently unsupported. "
+                    "Proceeding to write the state without them.";
+  }
   google::protobuf::Empty request;
   async_grpc::Client<handlers::WriteStateSignature> client(client_channel_);
   CHECK(client.Write(request));

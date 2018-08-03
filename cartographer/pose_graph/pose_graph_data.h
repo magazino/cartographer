@@ -28,6 +28,10 @@ struct PoseGraphData {
   std::vector<std::unique_ptr<Constraint>> constraints;
 };
 
+void AddNodeToPoseGraphData(const proto::Node& node, PoseGraphData* data);
+void AddConstraintToPoseGraphData(const proto::Constraint& constraint,
+                                  PoseGraphData* data);
+
 }  // namespace pose_graph
 }  // namespace cartographer
 

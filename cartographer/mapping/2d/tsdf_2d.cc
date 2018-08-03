@@ -16,6 +16,8 @@
 
 #include "cartographer/mapping/2d/tsdf_2d.h"
 
+#include "absl/memory/memory.h"
+
 namespace cartographer {
 namespace mapping {
 
@@ -24,7 +26,7 @@ TSDF2D::TSDF2D(const MapLimits& limits, float truncation_distance,
     : Grid2D(limits, -truncation_distance, truncation_distance,
              conversion_tables),
       conversion_tables_(conversion_tables),
-      value_converter_(common::make_unique<TSDValueConverter>(
+      value_converter_(absl::make_unique<TSDValueConverter>(
           truncation_distance, max_weight, conversion_tables_)),
       weight_cells_(
           limits.cell_limits().num_x_cells * limits.cell_limits().num_y_cells,
@@ -34,7 +36,7 @@ TSDF2D::TSDF2D(const proto::Grid2D& proto,
                ValueConversionTables* conversion_tables)
     : Grid2D(proto, conversion_tables), conversion_tables_(conversion_tables) {
   CHECK(proto.has_tsdf_2d());
-  value_converter_ = common::make_unique<TSDValueConverter>(
+  value_converter_ = absl::make_unique<TSDValueConverter>(
       proto.tsdf_2d().truncation_distance(), proto.tsdf_2d().max_weight(),
       conversion_tables_);
   weight_cells_.reserve(proto.tsdf_2d().weight_cells_size());
@@ -64,6 +66,8 @@ void TSDF2D::SetCell(const Eigen::Array2i& cell_index, float tsd,
   uint16* weight_cell = &weight_cells_[flat_index];
   *weight_cell = value_converter_->WeightToValue(weight);
 }
+
+GridType TSDF2D::GetGridType() const { return GridType::TSDF; }
 
 float TSDF2D::GetTSD(const Eigen::Array2i& cell_index) const {
   if (limits().Contains(cell_index)) {
@@ -118,7 +122,7 @@ std::unique_ptr<Grid2D> TSDF2D::ComputeCroppedGrid() const {
   const double resolution = limits().resolution();
   const Eigen::Vector2d max =
       limits().max() - resolution * Eigen::Vector2d(offset.y(), offset.x());
-  std::unique_ptr<TSDF2D> cropped_grid = common::make_unique<TSDF2D>(
+  std::unique_ptr<TSDF2D> cropped_grid = absl::make_unique<TSDF2D>(
       MapLimits(resolution, max, cell_limits), value_converter_->getMaxTSD(),
       value_converter_->getMaxWeight(), conversion_tables_);
   for (const Eigen::Array2i& xy_index : XYIndexRangeIterator(cell_limits)) {
@@ -126,6 +130,7 @@ std::unique_ptr<Grid2D> TSDF2D::ComputeCroppedGrid() const {
     cropped_grid->SetCell(xy_index, GetTSD(xy_index + offset),
                           GetWeight(xy_index + offset));
   }
+  cropped_grid->FinishUpdate();
   return std::move(cropped_grid);
 }
 
@@ -141,6 +146,7 @@ bool TSDF2D::DrawToSubmapTexture(
     if (!IsKnown(xy_index + offset)) {
       cells.push_back(0);  // value
       cells.push_back(0);  // alpha
+      continue;
     }
     // We would like to add 'delta' but this is not possible using a value and
     // alpha. We use premultiplied alpha, so when 'delta' is positive we can
