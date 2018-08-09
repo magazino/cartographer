@@ -138,7 +138,8 @@ void FillSubmapSlice(
 
   auto& texture_proto = response.textures(0);
   const SubmapTexture::Pixels pixels = UnpackTextureData(
-      texture_proto.cells(), texture_proto.width(), texture_proto.height());
+      texture_proto.cells(), texture_proto.width(), texture_proto.height(),
+      proto.submap_id().trajectory_id());
   submap_slice->width = texture_proto.width();
   submap_slice->height = texture_proto.height();
   submap_slice->resolution = texture_proto.resolution();
@@ -175,7 +176,8 @@ void DeserializeAndFillSubmapSlices(
 }
 
 SubmapTexture::Pixels UnpackTextureData(const std::string& compressed_cells,
-                                        const int width, const int height) {
+                                        const int width, const int height,
+                                        const int trajectory_id) {
   SubmapTexture::Pixels pixels;
   std::string cells;
   ::cartographer::common::FastGunzipString(compressed_cells, &cells);
@@ -185,8 +187,15 @@ SubmapTexture::Pixels UnpackTextureData(const std::string& compressed_cells,
   pixels.alpha.reserve(num_pixels);
   for (int i = 0; i < height; ++i) {
     for (int j = 0; j < width; ++j) {
-      pixels.intensity.push_back(cells[(i * width + j) * 2]);
-      pixels.alpha.push_back(cells[(i * width + j) * 2 + 1]);
+      auto intensity_value = cells[(i * width + j) * 2];
+      auto alpha_value = cells[(i * width + j) * 2 + 1];
+      bool observed = !(intensity_value == 0 && alpha_value == 0);
+      if (trajectory_id == 0) {
+        pixels.intensity.push_back(intensity_value >> 2);
+      } else {
+        pixels.intensity.push_back(intensity_value);
+      }
+      pixels.alpha.push_back(alpha_value);
     }
   }
   return pixels;

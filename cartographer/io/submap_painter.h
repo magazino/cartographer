@@ -92,7 +92,8 @@ void DeserializeAndFillSubmapSlices(
 
 // Unpacks cell data as provided by the backend into 'intensity' and 'alpha'.
 SubmapTexture::Pixels UnpackTextureData(const std::string& compressed_cells,
-                                        int width, int height);
+                                        int width, int height,
+                                        const int trajectory_id);
 
 // Draw a texture into a cairo surface. 'cairo_data' will store the pixel data
 // for the surface and must therefore outlive the use of the surface.
