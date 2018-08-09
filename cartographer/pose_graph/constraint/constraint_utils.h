@@ -14,25 +14,24 @@
  * limitations under the License.
  */
 
-#include "cartographer/pose_graph/pose_graph_controller.h"
+#ifndef CARTOGRAPHER_POSE_GRAPH_CONSTRAINT_CONSTRAINT_UTILS_H_
+#define CARTOGRAPHER_POSE_GRAPH_CONSTRAINT_CONSTRAINT_UTILS_H_
+
+#include "cartographer/pose_graph/node/imu_calibration.h"
+#include "cartographer/pose_graph/node/pose_2d.h"
+#include "cartographer/pose_graph/node/pose_3d.h"
+#include "ceres/problem.h"
 
 namespace cartographer {
 namespace pose_graph {
 
-void PoseGraphController::AddNode(const proto::Node& node) {
-  absl::MutexLock locker(&mutex_);
-  AddNodeToPoseGraphData(node, &data_);
-}
+void AddPose2D(Pose2D* pose, ceres::Problem* problem);
 
-void PoseGraphController::AddConstraint(const proto::Constraint& constraint) {
-  absl::MutexLock locker(&mutex_);
-  AddConstraintToPoseGraphData(constraint, &data_);
-}
+void AddPose3D(Pose3D* pose, ceres::Problem* problem);
 
-Optimizer::SolverStatus PoseGraphController::Optimize() {
-  absl::MutexLock locker(&mutex_);
-  return optimizer_->Solve(&data_);
-}
+void AddImuCalibration(ImuCalibration* pose, ceres::Problem* problem);
 
 }  // namespace pose_graph
 }  // namespace cartographer
+
+#endif  // CARTOGRAPHER_POSE_GRAPH_CONSTRAINT_CONSTRAINT_UTILS_H_
