@@ -151,6 +151,14 @@ void LocalTrajectoryUploader::Shutdown() {
 }
 
 void LocalTrajectoryUploader::TryRecovery() {
+  auto channel_state = client_channel_->GetState(true /* try_to_connect */);
+  if (channel_state != grpc_connectivity_state::GRPC_CHANNEL_READY) {
+    LOG(ERROR) << "Failed to re-connect to uplink prior to recovery attempt.";
+    return;
+  } else {
+    LOG(INFO) << "Channel ready again, trying recovery.";
+  }
+
   // Wind the sensor_data_queue forward to the next new submap.
   LOG(INFO) << "LocalTrajectoryUploader tries to recover with next submap.";
   while (true) {
@@ -218,8 +226,9 @@ void LocalTrajectoryUploader::ProcessSendQueue() {
       if (batch_request.sensor_data_size() == batch_size_) {
         async_grpc::Client<handlers::AddSensorDataBatchSignature> client(
             client_channel_, common::FromSeconds(kConnectionTimeoutInSeconds),
-            async_grpc::CreateUnlimitedConstantDelayStrategy(
-                common::FromSeconds(1), kUnrecoverableStatusCodes));
+            // Retry with increasing timeout (powers of 2), max. 5 times.
+            async_grpc::CreateLimitedBackoffStrategy(
+                common::FromSeconds(0.1), 2, 5));
         if (client.Write(batch_request)) {
           LOG(INFO) << "Uploaded " << batch_request.ByteSize()
                     << " bytes of sensor data.";
