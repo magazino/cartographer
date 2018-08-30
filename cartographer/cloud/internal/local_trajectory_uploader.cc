@@ -235,12 +235,13 @@ void LocalTrajectoryUploader::ProcessSendQueue() {
           batch_request.clear_sensor_data();
           continue;
         }
-        // Unrecoverable error occurred. Attempt recovery.
+        LOG(WARN) << "Unrecoverable error occurred. Attempt recovery.";
         batch_request.clear_sensor_data();
         TryRecovery();
       }
     }
   }
+  LOG(WARN) << "Shutting down, exiting ProcessSendQueue.";
 }
 
 bool LocalTrajectoryUploader::TranslateTrajectoryId(
