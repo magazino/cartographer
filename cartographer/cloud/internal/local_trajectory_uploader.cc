@@ -241,7 +241,7 @@ void LocalTrajectoryUploader::ProcessSendQueue() {
       }
     }
   }
-  LOG(WARN) << "Shutting down, exiting ProcessSendQueue.";
+  LOG(WARNING) << "Shutting down, exiting ProcessSendQueue.";
 }
 
 bool LocalTrajectoryUploader::TranslateTrajectoryId(
