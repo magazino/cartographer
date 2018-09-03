@@ -152,7 +152,7 @@ void LocalTrajectoryUploader::Shutdown() {
 }
 
 void LocalTrajectoryUploader::TryRecovery() {
-  auto channel_state = client_channel_->GetState(false /* try_to_connect */);
+  auto channel_state = client_channel_->GetState(true /* try_to_connect */);
   if (channel_state != grpc_connectivity_state::GRPC_CHANNEL_READY) {
     LOG(INFO) << "Trying to re-connect to uplink...";
     std::chrono::system_clock::time_point deadline =
