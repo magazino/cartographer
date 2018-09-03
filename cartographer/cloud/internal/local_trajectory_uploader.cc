@@ -43,7 +43,7 @@ const common::Duration kPopTimeout = common::FromMilliseconds(100);
 // This defines the '::grpc::StatusCode's that are considered unrecoverable
 // errors and hence no retries will be attempted by the client.
 const std::set<::grpc::StatusCode> kUnrecoverableStatusCodes = {
-    ::grpc::NOT_FOUND};
+    ::grpc::NOT_FOUND, ::grpc::UNAVAILABLE, ::grpc::UNKNOWN};
 
 bool IsNewSubmap(const mapping::proto::Submap& submap) {
   return (submap.has_submap_2d() && submap.submap_2d().num_range_data() == 1) ||
@@ -223,19 +223,19 @@ void LocalTrajectoryUploader::ProcessSendQueue() {
         }
       }
 
+
       if (batch_request.sensor_data_size() == batch_size_) {
         async_grpc::Client<handlers::AddSensorDataBatchSignature> client(
             client_channel_, common::FromSeconds(kConnectionTimeoutInSeconds),
-            // Retry with increasing timeout (powers of 2), max. 5 times.
-            async_grpc::CreateLimitedBackoffStrategy(
-                common::FromSeconds(0.1), 2, 5));
+            async_grpc::CreateUnlimitedConstantDelayStrategy(
+                common::FromSeconds(1), kUnrecoverableStatusCodes));
         if (client.Write(batch_request)) {
           LOG(INFO) << "Uploaded " << batch_request.ByteSize()
                     << " bytes of sensor data.";
           batch_request.clear_sensor_data();
           continue;
         }
-        LOG(WARN) << "Unrecoverable error occurred. Attempt recovery.";
+        // Unrecoverable error occurred. Attempt recovery.
         batch_request.clear_sensor_data();
         TryRecovery();
       }
