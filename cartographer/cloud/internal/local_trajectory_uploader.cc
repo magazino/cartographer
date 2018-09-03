@@ -156,10 +156,15 @@ void LocalTrajectoryUploader::TryRecovery() {
   if (channel_state != grpc_connectivity_state::GRPC_CHANNEL_READY) {
     LOG(INFO) << "Trying to re-connect to uplink...";
     std::chrono::system_clock::time_point deadline =
-      std::chrono::system_clock::now() +
-      std::chrono::seconds(kConnectionRecoveryTimeoutInSeconds);
+        std::chrono::system_clock::now() +
+        std::chrono::seconds(kConnectionRecoveryTimeoutInSeconds);
     if (!client_channel_->WaitForConnected(deadline)) {
       LOG(ERROR) << "Failed to re-connect to uplink prior to recovery attempt.";
+      return;
+    }
+    if (client_channel_->GetState(false) !=
+        grpc_connectivity_state::GRPC_CHANNEL_READY) {
+      LOG(ERROR) << "Uplink channel is not ready.";
       return;
     }
   }
