@@ -117,6 +117,12 @@ class PoseGraph : public PoseGraphInterface {
   // not exist (anymore).
   virtual SubmapData GetSubmapData(const SubmapId& submap_id) const = 0;
 
+  // Returns the submap IDs of unfinished submaps.
+  std::set<mapping::SubmapId> GetUnfinishedSubmapIds() const;
+  
+  // Returns the IDs of nodes that are connected to an unfinished submap.
+  std::set<mapping::NodeId> GetNodeIdsConnectedToUnfinishedSubmaps() const;
+
   proto::PoseGraph ToProto(bool include_unfinished_submaps) const override;
 
   // Returns the IMU data.

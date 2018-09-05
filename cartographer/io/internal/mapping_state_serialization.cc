@@ -224,7 +224,21 @@ void WritePbStream(
 
   SerializeSubmaps(pose_graph.GetAllSubmapData(), include_unfinished_submaps,
                    writer);
-  SerializeTrajectoryNodes(pose_graph.GetTrajectoryNodes(), writer);
+  // TODO move
+  MapById<NodeId, TrajectoryNode> trajectory_nodes;
+  // TODO deactivated for test
+  if (false && !include_unfinished_submaps) {
+    std::set<mapping::NodeId> orphaned_node_ids = pose_graph.GetNodeIdsConnectedToUnfinishedSubmaps();
+    for (const auto& node_id_data : pose_graph.GetTrajectoryNodes()) {
+      if (!orphaned_node_ids.count(node_id_data.id)) {
+        trajectory_nodes.Insert(node_id_data.id, node_id_data.data);
+      }
+    }
+  } else {
+    trajectory_nodes = pose_graph.GetTrajectoryNodes();
+  }
+  // TODO add include unfinished argument and move here?
+  SerializeTrajectoryNodes(trajectory_nodes, writer);
   SerializeTrajectoryData(pose_graph.GetTrajectoryData(), writer);
   SerializeImuData(pose_graph.GetImuData(), writer);
   SerializeOdometryData(pose_graph.GetOdometryData(), writer);

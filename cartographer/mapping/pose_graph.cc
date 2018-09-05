@@ -132,6 +132,30 @@ proto::PoseGraph::Constraint ToProto(const PoseGraph::Constraint& constraint) {
   return constraint_proto;
 }
 
+std::set<mapping::SubmapId> PoseGraph::GetUnfinishedSubmapIds() const {
+  std::set<mapping::SubmapId> unfinished_submap_ids;
+  for (const auto& submap_id_data : GetAllSubmapData()) {
+    if (!submap_id_data.data.submap->insertion_finished()) {
+      unfinished_submap_ids.insert(submap_id_data.id);
+    }
+  }
+  return unfinished_submap_ids;
+}
+
+std::set<mapping::NodeId> PoseGraph::GetNodeIdsConnectedToUnfinishedSubmaps() const {
+  std::set<mapping::NodeId> node_ids;
+  std::set<mapping::SubmapId> unfinished_submap_ids = GetUnfinishedSubmapIds();
+  for (const auto& constraint : constraints()) {
+      if (unfinished_submap_ids.count(constraint.submap_id)) {
+        node_ids.insert(constraint.node_id);
+      } else if (node_ids.count(constraint.node_id)) {
+        // Remove node IDs that are not only connected to an unfinished submap.
+        node_ids.erase(constraint.node_id);
+      }
+  }
+  return node_ids;
+}
+
 proto::PoseGraph PoseGraph::ToProto(bool include_unfinished_submaps) const {
   proto::PoseGraph proto;
 
@@ -146,14 +170,13 @@ proto::PoseGraph PoseGraph::ToProto(bool include_unfinished_submaps) const {
     return trajectory_protos.at(trajectory_id);
   };
 
-  std::set<mapping::SubmapId> unfinished_submaps;
+  std::set<mapping::SubmapId> unfinished_submaps = GetUnfinishedSubmapIds();
   for (const auto& submap_id_data : GetAllSubmapData()) {
     proto::Trajectory* trajectory_proto =
         trajectory(submap_id_data.id.trajectory_id);
     if (!include_unfinished_submaps &&
-        !submap_id_data.data.submap->insertion_finished()) {
-      // Collect IDs of all unfinished submaps and skip them.
-      unfinished_submaps.insert(submap_id_data.id);
+        unfinished_submaps.count(submap_id_data.id)) {
+      // Skip unfinished submaps.
       continue;
     }
     CHECK(submap_id_data.data.submap != nullptr);
@@ -164,14 +187,13 @@ proto::PoseGraph PoseGraph::ToProto(bool include_unfinished_submaps) const {
   }
 
   auto constraints_copy = constraints();
-  std::set<mapping::NodeId> orphaned_nodes;
+  std::set<mapping::NodeId> orphaned_nodes = GetNodeIdsConnectedToUnfinishedSubmaps();
   proto.mutable_constraint()->Reserve(constraints_copy.size());
   for (auto it = constraints_copy.begin(); it != constraints_copy.end();) {
     if (!include_unfinished_submaps &&
         unfinished_submaps.count(it->submap_id) > 0) {
       // Skip all those constraints that refer to unfinished submaps and
       // remember the corresponding trajectory nodes as potentially orphaned.
-      orphaned_nodes.insert(it->node_id);
       it = constraints_copy.erase(it);
       continue;
     }
@@ -179,21 +201,24 @@ proto::PoseGraph PoseGraph::ToProto(bool include_unfinished_submaps) const {
     ++it;
   }
 
-  if (!include_unfinished_submaps) {
-    // Iterate over all constraints and remove trajectory nodes from
-    // 'orphaned_nodes' that are not actually orphaned.
-    for (const auto& constraint : constraints_copy) {
-      orphaned_nodes.erase(constraint.node_id);
-    }
-  }
+  // TODO MG: not needed because already done in GetNodeIdsConnectedToUnfinishedSubmaps();
+//   if (!include_unfinished_submaps) {
+//     // Iterate over all constraints and remove trajectory nodes from
+//     // 'orphaned_nodes' that are not actually orphaned.
+//     for (const auto& constraint : constraints_copy) {
+//       orphaned_nodes.erase(constraint.node_id);
+//     }
+//   }
 
   for (const auto& node_id_data : GetTrajectoryNodes()) {
     proto::Trajectory* trajectory_proto =
         trajectory(node_id_data.id.trajectory_id);
     if (!include_unfinished_submaps &&
         orphaned_nodes.count(node_id_data.id) > 0) {
+      //LOG(INFO) << "Skipping trajectory node with index " << std::to_string(node_id_data.id.node_index);
       // Skip orphaned trajectory nodes.
-      continue;
+      // TODO check if this is harmful
+      //continue;
     }
     CHECK(node_id_data.data.constant_data != nullptr);
     auto* const node_proto = trajectory_proto->add_node();

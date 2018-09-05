@@ -721,7 +721,7 @@ void PoseGraph2D::AddSerializedConstraints(
   AddWorkItem([this, constraints]() LOCKS_EXCLUDED(mutex_) {
     absl::MutexLock locker(&mutex_);
     for (const auto& constraint : constraints) {
-      CHECK(data_.trajectory_nodes.Contains(constraint.node_id));
+      CHECK(data_.trajectory_nodes.Contains(constraint.node_id)) << "node_id: " << std::to_string(constraint.node_id.node_index);
       CHECK(data_.submap_data.Contains(constraint.submap_id));
       CHECK(data_.trajectory_nodes.at(constraint.node_id).constant_data !=
             nullptr);
