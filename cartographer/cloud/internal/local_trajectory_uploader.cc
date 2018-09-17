@@ -43,7 +43,7 @@ const common::Duration kPopTimeout = common::FromMilliseconds(100);
 // This defines the '::grpc::StatusCode's that are considered unrecoverable
 // errors and hence no retries will be attempted by the client.
 const std::set<::grpc::StatusCode> kUnrecoverableStatusCodes = {
-    ::grpc::DEADLINE_EXCEEDED,
+    //::grpc::DEADLINE_EXCEEDED,
     ::grpc::NOT_FOUND,
     ::grpc::UNAVAILABLE,
     ::grpc::UNKNOWN,
@@ -227,8 +227,9 @@ void LocalTrajectoryUploader::ProcessSendQueue() {
       if (batch_request.sensor_data_size() == batch_size_) {
         async_grpc::Client<handlers::AddSensorDataBatchSignature> client(
             client_channel_, common::FromSeconds(kConnectionTimeoutInSeconds),
-            async_grpc::CreateUnlimitedConstantDelayStrategy(
-                common::FromSeconds(1), kUnrecoverableStatusCodes));
+            // 0.5 1 2 4 8 16 ...
+            async_grpc::CreateLimitedBackoffStrategy(
+                common::FromSeconds(0.5), 2, 6));
         if (client.Write(batch_request)) {
           LOG(INFO) << "Uploaded " << batch_request.ByteSize()
                     << " bytes of sensor data.";
