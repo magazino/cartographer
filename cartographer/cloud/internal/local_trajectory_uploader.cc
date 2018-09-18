@@ -35,6 +35,10 @@ namespace {
 
 using absl::make_unique;
 
+// TODO values are set more or less randomly
+constexpr int kKeepAliveTimeInMilliseconds = 1000;  // default: MAX_INT
+constexpr int kKeepAliveTimeoutInMilliseconds = 5000;  // default: 20000
+
 constexpr int kConnectionTimeoutInSeconds = 10;
 constexpr int kConnectionRecoveryTimeoutInSeconds = 60;
 constexpr int kTokenRefreshIntervalInSeconds = 60;
@@ -116,7 +120,13 @@ LocalTrajectoryUploader::LocalTrajectoryUploader(
                  ? ::grpc::SslCredentials(::grpc::SslCredentialsOptions())
                  : ::grpc::InsecureChannelCredentials());
 
-  client_channel_ = ::grpc::CreateChannel(uplink_server_address, channel_creds);
+  ::grpc::ChannelArguments channel_args = ::grpc::ChannelArguments();
+  channel_args.SetInt(GRPC_ARG_KEEPALIVE_TIME_MS, kKeepAliveTimeInMilliseconds);
+  channel_args.SetInt(GRPC_ARG_KEEPALIVE_TIMEOUT_MS, kKeepAliveTimeoutInMilliseconds);
+  channel_args.SetInt(GRPC_ARG_KEEPALIVE_PERMIT_WITHOUT_CALLS, 1);
+  channel_args.SetInt(GRPC_ARG_HTTP2_MAX_PINGS_WITHOUT_DATA, 0);
+  
+  client_channel_ = ::grpc::CreateCustomChannel(uplink_server_address, channel_creds, channel_args);
   std::chrono::system_clock::time_point deadline =
       std::chrono::system_clock::now() +
       std::chrono::seconds(kConnectionTimeoutInSeconds);
