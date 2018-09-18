@@ -123,6 +123,7 @@ LocalTrajectoryUploader::LocalTrajectoryUploader(
   ::grpc::ChannelArguments channel_args = ::grpc::ChannelArguments();
   channel_args.SetInt(GRPC_ARG_KEEPALIVE_TIME_MS, kKeepAliveTimeInMilliseconds);
   channel_args.SetInt(GRPC_ARG_KEEPALIVE_TIMEOUT_MS, kKeepAliveTimeoutInMilliseconds);
+  channel_args.SetInt(GRPC_ARG_HTTP2_MIN_SENT_PING_INTERVAL_WITHOUT_DATA_MS, 100);
   channel_args.SetInt(GRPC_ARG_KEEPALIVE_PERMIT_WITHOUT_CALLS, 1);
   channel_args.SetInt(GRPC_ARG_HTTP2_MAX_PINGS_WITHOUT_DATA, 0);
   
