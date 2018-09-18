@@ -89,6 +89,7 @@ class OrderedMultiQueue {
   common::Time last_dispatched_time_ = common::Time::min();
 
   std::map<int, common::Time> common_start_time_per_trajectory_;
+  std::map<QueueKey, common::Time> last_added_timestamp_;
   std::map<QueueKey, Queue> queues_;
   QueueKey blocker_;
 };

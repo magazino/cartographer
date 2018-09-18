@@ -68,6 +68,14 @@ void OrderedMultiQueue::Add(const QueueKey& queue_key,
         << "Ignored data for queue: '" << queue_key << "'";
     return;
   }
+  auto timestamp_it = last_added_timestamp_.find(queue_key);
+  if (timestamp_it != last_added_timestamp_.end() &&
+      timestamp_it->second == data->GetTime()) {
+    LOG(WARNING) << "Ignoring data with double timestamp: " << data->GetTime()
+                 << " for queue: " << queue_key;
+    return;
+  }
+  last_added_timestamp_[queue_key] = data->GetTime();
   it->second.queue.Push(std::move(data));
   Dispatch();
 }
