@@ -63,6 +63,7 @@ bool UploadSensorData(std::shared_ptr<::grpc::Channel> client_channel,
       if (kUnrecoverableStatusCodes.count(status.error_code()) > 0) {
         return false;
       } else {
+        LOG(WARNING) << "Retrying in 1 second...";
         std::this_thread::sleep_for(std::chrono::seconds(1));
         continue;
       }
