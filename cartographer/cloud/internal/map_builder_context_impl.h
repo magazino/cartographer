@@ -128,7 +128,7 @@ bool MapBuilderContext<SubmapType>::IsDuplicateBatchRequest(
     const proto::AddSensorDataBatchRequest& request) {
   if (request.sensor_data_size() == 0) return false;
   const auto& data = request.sensor_data(0);
-  const std::tuple<int, std::string, std::string> key = {
+  const std::tuple<int, std::string, std::string> key {
       data.sensor_metadata().trajectory_id(),
       data.sensor_metadata().sensor_id(), data.sensor_metadata().client_id()};
   int64_t timestamp = 0;
