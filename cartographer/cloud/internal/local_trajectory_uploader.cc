@@ -44,8 +44,8 @@ const common::Duration kPopTimeout = common::FromMilliseconds(100);
 // errors and hence no retries will be attempted by the client.
 const std::set<::grpc::StatusCode> kUnrecoverableStatusCodes = {
     ::grpc::NOT_FOUND,
-    ::grpc::UNAVAILABLE,
-    ::grpc::UNKNOWN,
+    //::grpc::UNAVAILABLE,
+    //::grpc::UNKNOWN,
 };
 
 bool IsNewSubmap(const mapping::proto::Submap& submap) {
