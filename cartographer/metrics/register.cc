@@ -23,6 +23,7 @@
 #include "cartographer/mapping/internal/constraints/constraint_builder_2d.h"
 #include "cartographer/mapping/internal/constraints/constraint_builder_3d.h"
 #include "cartographer/mapping/internal/global_trajectory_builder.h"
+#include "cartographer/mapping/internal/optimization/optimization_problem_2d.h"
 #include "cartographer/sensor/internal/trajectory_collator.h"
 
 namespace cartographer {
@@ -34,6 +35,7 @@ void RegisterAllMetrics(FamilyFactory* registry) {
   mapping::GlobalTrajectoryBuilderRegisterMetrics(registry);
   mapping::LocalTrajectoryBuilder2D::RegisterMetrics(registry);
   mapping::LocalTrajectoryBuilder3D::RegisterMetrics(registry);
+  mapping::optimization::OptimizationProblem2D::RegisterMetrics(registry);
   mapping::PoseGraph2D::RegisterMetrics(registry);
   mapping::PoseGraph3D::RegisterMetrics(registry);
   sensor::TrajectoryCollator::RegisterMetrics(registry);

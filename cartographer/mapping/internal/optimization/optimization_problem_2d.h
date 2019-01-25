@@ -31,6 +31,7 @@
 #include "cartographer/mapping/internal/optimization/optimization_problem_interface.h"
 #include "cartographer/mapping/pose_graph_interface.h"
 #include "cartographer/mapping/proto/pose_graph/optimization_problem_options.pb.h"
+#include "cartographer/metrics/family_factory.h"
 #include "cartographer/sensor/imu_data.h"
 #include "cartographer/sensor/map_by_time.h"
 #include "cartographer/sensor/odometry_data.h"
@@ -100,6 +101,8 @@ class OptimizationProblem2D
       const override {
     return odometry_data_;
   }
+
+  static void RegisterMetrics(metrics::FamilyFactory* family_factory);
 
  private:
   std::unique_ptr<transform::Rigid3d> InterpolateOdometry(

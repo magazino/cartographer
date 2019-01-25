@@ -40,6 +40,8 @@ namespace mapping {
 namespace optimization {
 namespace {
 
+static auto* kSubmapsMetric = metrics::Gauge::Null();
+
 using ::cartographer::mapping::optimization::CeresPose;
 using LandmarkNode = ::cartographer::mapping::PoseGraphInterface::LandmarkNode;
 
@@ -178,6 +180,7 @@ void OptimizationProblem2D::AddSubmap(
 void OptimizationProblem2D::InsertSubmap(
     const SubmapId& submap_id, const transform::Rigid2d& global_submap_pose) {
   submap_data_.Insert(submap_id, SubmapSpec2D{global_submap_pose});
+  kSubmapsMetric->Set(submap_data_.size());
 }
 
 void OptimizationProblem2D::TrimSubmap(const SubmapId& submap_id) {
@@ -362,6 +365,14 @@ OptimizationProblem2D::CalculateOdometryBetweenNodes(
     }
   }
   return nullptr;
+}
+
+void OptimizationProblem2D::RegisterMetrics(
+    metrics::FamilyFactory* family_factory) {
+  auto* submaps = family_factory->NewGaugeFamily(
+      "mapping_2d_optimization_problem_submaps",
+      "Number of submaps that are currently in the optimization problem.");
+  kSubmapsMetric = submaps->Add({} /* labels */);
 }
 
 }  // namespace optimization
